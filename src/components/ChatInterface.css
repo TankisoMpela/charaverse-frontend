@@ -1,0 +1,440 @@
+/* client/src/components/ChatInterface.css */
+
+.chat-interface-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height */
+    width: 100%;
+    max-width: 800px; /* Keep it constrained for better readability */
+    margin: 0 auto; /* Center the container */
+    border: 1px solid #ccc;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* Important to contain sticky elements */
+    position: relative; /* For absolute positioned elements like gallery/error */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* Removed background-color here to fix tint over background image */
+    transition: background-image 0.5s ease-in-out;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px; /* Added horizontal padding */
+    background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent white for header */
+    border-bottom: 1px solid #eee;
+    z-index: 100; /* Ensure it stays on top of other content */
+
+    /* ADD THESE FOR STICKY BEHAVIOR */
+    position: sticky;
+    top: 0;
+    width: 100%;
+    box-sizing: border-box; /* Include padding in width */
+}
+
+.chat-header h2 {
+    margin: 0; /* Remove default margin */
+    font-size: 1.5em;
+    color: #333;
+    flex-grow: 1; /* Allows title to take available space */
+    text-align: center; /* Center the title */
+}
+
+/* Common button styles for header */
+.chat-header button {
+    padding: 8px 15px;
+    color: white;
+    border: none;
+    border-radius: 20px; /* More rounded buttons */
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Space between icon and text */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.chat-header .back-button {
+    background-color: #6c757d; /* Gray */
+}
+
+.chat-header .back-button:hover {
+    background-color: #5a6268;
+}
+
+.chat-header .new-chat-button { /* New button for "New Chat" */
+    background-color: #007bff; /* Blue */
+    margin: 0 8px; /* Space it out from other buttons */
+}
+
+.chat-header .new-chat-button:hover {
+    background-color: #0056b3;
+}
+
+.chat-header .gallery-button {
+    background-color: #28a745; /* Green */
+}
+
+.chat-header .gallery-button:hover {
+    background-color: #218838;
+}
+
+/* Message Area */
+.chat-messages {
+    flex-grow: 1; /* Takes up available space */
+    padding: 20px;
+    overflow-y: auto; /* Enables scrolling for messages */
+    /* Changed to fully transparent to allow background image to show without tint */
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between message bubbles */
+}
+
+.message {
+    padding: 10px 15px;
+    border-radius: 18px; /* More rounded corners */
+    max-width: 75%; /* Limit message bubble width */
+    word-wrap: break-word; /* Ensure long words break */
+    font-size: 0.95em;
+    line-height: 1.4;
+    color: #333; /* Darker text color for all bubbles */
+}
+
+.message.user {
+    background-color: #cce5ff; /* Softer blue for user */
+    align-self: flex-end; /* Align to right */
+    border-bottom-right-radius: 18px; /* Make all corners rounded */
+}
+
+.message.ai {
+    background-color: #f0f0f0; /* Light gray/white for AI */
+    align-self: flex-start; /* Align to left */
+    border: 1px solid #e0e0e0;
+    border-bottom-left-radius: 18px; /* Make all corners rounded (fixed) */
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+}
+
+.message.system {
+    background-color: #ffeeba; /* Light yellow for system messages */
+    color: #856404; /* Darker text */
+    text-align: center; /* System messages can remain centered */
+    align-self: center;
+    font-size: 0.85em;
+    max-width: 90%;
+    border-radius: 8px;
+}
+
+.typing-indicator {
+    background-color: #e0e0e0;
+    color: #555;
+    font-style: italic;
+    padding: 8px 12px;
+    border-radius: 15px;
+    margin-top: 5px;
+    align-self: flex-start;
+    max-width: fit-content;
+}
+
+/* Input Area */
+.chat-input-area {
+    display: flex;
+    padding: 15px;
+    border-top: 1px solid #eee;
+    background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent white for input area */
+    gap: 10px;
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 25px; /* Rounded input field */
+    font-size: 1em;
+}
+
+.chat-input-area button {
+    padding: 12px 20px;
+    background-color: #6a0dad; /* A nice purple */
+    color: white;
+    border: none;
+    border-radius: 25px; /* Rounded button */
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+}
+
+.chat-input-area button:hover:not(:disabled) {
+    background-color: #5a099a;
+}
+
+.chat-input-area button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* --- Gallery Overlay Styles --- */
+.gallery-overlay {
+    position: absolute; /* Changed to absolute to stay within container */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto; /* Allow scrolling for gallery content */
+}
+
+.gallery-content {
+    background-color: rgba(255, 255, 255, 0.98); /* Slightly less transparent */
+    border-radius: 10px;
+    padding: 30px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* More pronounced shadow */
+    position: relative;
+    max-height: 90vh; /* Limit height to fit screen */
+    overflow-y: auto; /* Enable internal scrolling for gallery content */
+}
+
+.gallery-close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 12px;
+    background-color: #dc3545; /* Red for close button */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 21; /* Ensure close button is above other gallery content */
+}
+
+.gallery-close-button:hover {
+    background-color: #c82333;
+}
+
+.gallery-content h3, .gallery-content h4 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 15px;
+    margin-top: 20px; /* Adjusted margin for clarity */
+}
+
+.unlocked-images-grid, .locked-images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Slightly larger images */
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.gallery-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1; /* Maintain square aspect ratio */
+    border: 1px solid #ddd; /* Subtle border */
+}
+
+.gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+    transition: filter 0.3s ease-in-out, transform 0.2s ease;
+}
+
+.gallery-image:hover.unlocked {
+    transform: scale(1.05); /* Slight zoom on hover for unlocked */
+}
+
+.gallery-image.blurred {
+    filter: blur(5px);
+}
+
+.lock-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1em;
+    text-align: center;
+    opacity: 1;
+}
+
+.lock-overlay i {
+    font-size: 2em;
+    margin-bottom: 5px;
+}
+
+/* --- Error Alert Styles --- */
+.alert-error {
+    background-color: #f8d7da; /* Light red background */
+    color: #721c24; /* Dark red text */
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    padding: 12px 20px;
+    margin: 15px; /* Margin from the container edges */
+    position: absolute; /* Positioning within chat-interface-container */
+    top: 60px; /* Below the sticky header */
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 30px); /* Full width minus margin */
+    max-width: 450px; /* Max width for readability */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9em;
+    z-index: 101; /* Above chat header */
+}
+
+.alert-close-button {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    color: #721c24;
+    margin-left: 15px;
+    line-height: 1; /* Align 'X' nicely */
+}
+
+/* Full page error display (when initial load fails) */
+.chat-error-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #fcebeb;
+    text-align: center;
+}
+
+.chat-error-page .alert-error {
+    position: static; /* Override absolute positioning */
+    transform: none;
+    margin: 20px;
+    display: block; /* Stack content */
+    width: auto; /* Auto width for content */
+}
+
+/* --- ReactMarkdown specific styles for chat bubbles --- */
+.message p {
+    margin-bottom: 0.8em; /* Add space between paragraphs */
+    margin-top: 0; /* Remove default top margin */
+    line-height: 1.4; /* Improve readability */
+    text-align: left; /* Ensure text is left-aligned within message bubbles */
+}
+
+/* Remove bottom margin from the last paragraph within a message bubble */
+.message p:last-child {
+    margin-bottom: 0;
+}
+
+.message ul,
+.message ol {
+    margin-bottom: 0.5em;
+    padding-left: 20px; /* Indent lists */
+    text-align: left; /* Ensure lists are left-aligned */
+}
+
+.message li {
+    margin-bottom: 0.2em; /* Space between list items */
+}
+
+/* Style for code blocks */
+.message pre {
+    background-color: #f0f0f0;
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto; /* Enable horizontal scroll for very long lines of code */
+    white-space: pre-wrap; /* Preserve whitespace and wrap text */
+    word-wrap: break-word; /* Ensure long words break within code blocks */
+    max-width: 100%; /* Ensure it doesn't overflow parent message bubble */
+    box-sizing: border-box; /* Include padding in width calculation */
+    text-align: left; /* Ensure code blocks are left-aligned */
+}
+
+/* Style for inline code */
+.message code {
+    font-family: monospace;
+    font-size: 0.9em;
+    background-color: rgba(27, 31, 35, 0.05); /* Light background for inline code */
+    padding: 2px 4px;
+    border-radius: 3px;
+    word-break: break-word; /* Break long words within inline code */
+}
+
+/* Basic table styling for markdown */
+.message table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+    text-align: left; /* Ensure tables are left-aligned */
+}
+
+.message th,
+.message td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.message th {
+    background-color: #f2f2f2;
+}
+
+/* Optional: Blockquote styling */
+.message blockquote {
+    border-left: 4px solid #ccc;
+    padding-left: 10px;
+    color: #666;
+    margin-left: 0;
+    margin-right: 0;
+    text-align: left; /* Ensure blockquotes are left-aligned */
+}
+
+/* Optional: Image styling within markdown */
+.message img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    display: block; /* Prevents extra space below image */
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+/* Optional: Link styling within markdown */
+.message a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.message a:hover {
+    text-decoration: underline;
+}
