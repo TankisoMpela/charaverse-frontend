@@ -11,7 +11,7 @@ const MODELS = [
   'tencent/hy3:free',
 ];
 
-async function callOpenRouter(model, systemPrompt, messages) {
+async function callOpenRouter(model, systemPrompt, messages, stream = false) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -25,12 +25,14 @@ async function callOpenRouter(model, systemPrompt, messages) {
         ...messages.slice(-20),
       ],
       max_tokens: 1024,
+      stream,
     }),
   });
   if (!response.ok) {
     const err = await response.text();
     throw new Error(`${model}: ${response.status} ${err}`);
   }
+  if (stream) return response;
   const data = await response.json();
   return data.choices?.[0]?.message?.content ?? null;
 }
@@ -52,6 +54,32 @@ export default async function handler(req, res) {
   const { systemPrompt, messages } = body;
   if (!systemPrompt || !messages) {
     json(res, 400, { error: 'Missing systemPrompt or messages' });
+    return;
+  }
+
+  const isStream = req.query?.stream === '1';
+
+  if (isStream) {
+    for (const model of MODELS) {
+      try {
+        const openRouterRes = await callOpenRouter(model, systemPrompt, messages, true);
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        });
+        const reader = openRouterRes.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(decoder.decode(value));
+        }
+        res.end();
+        return;
+      } catch {}
+    }
+    json(res, 200, { text: "I'm sorry, I'm having trouble connecting right now. Please try again." });
     return;
   }
 

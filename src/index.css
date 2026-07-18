@@ -24,6 +24,30 @@
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
 }
 
+[data-theme="dark"] {
+  --navy: #e2e8f0;
+  --navy-light: #cbd5e1;
+  --navy-dark: #f1f5f9;
+  --gold: #f0d060;
+  --gold-light: #f5e08a;
+  --gold-dark: #e0b840;
+  --white: #1a1d23;
+  --cream: #121418;
+  --gray-50: #1e2028;
+  --gray-100: #262833;
+  --gray-200: #2e3140;
+  --gray-300: #3d4052;
+  --gray-400: #6b7084;
+  --gray-500: #8b90a0;
+  --gray-600: #a0a5b5;
+  --gray-700: #b8bcc9;
+  --gray-800: #d0d4de;
+  --gray-900: #e8ebf0;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -35,4 +59,20 @@ body {
   background: var(--cream);
   color: var(--gray-800);
   -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page transitions ── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: page-enter 0.35s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
 }

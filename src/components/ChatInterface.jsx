@@ -50,12 +50,18 @@ const ChatInterface = () => {
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState(0);
   const [error, setError] = useState(null);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [sessions, setSessions] = useState(() => loadSessions());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [remainingSuggestions, setRemainingSuggestions] = useState(() =>
+    professional?.suggestions ? [...professional.suggestions] : []
+  );
 
   const messagesEndRef = useRef(null);
+  const messagesScrollRef = useRef(null);
   const typingStartRef = useRef(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(SESSION_KEY, sessionId);
@@ -66,8 +72,17 @@ const ChatInterface = () => {
   }, [sessionId, professionalId, messages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!showScrollBtn) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, showScrollBtn]);
+
+  const handleMessagesScroll = useCallback(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollBtn(dist > 120);
+  }, []);
 
   useEffect(() => {
     if (!isAiTyping) {
@@ -95,7 +110,8 @@ const ChatInterface = () => {
   const handleNewChat = useCallback(() => {
     const newId = createSessionId();
     switchSession(newId);
-  }, [switchSession]);
+    setRemainingSuggestions(professional?.suggestions ? [...professional.suggestions] : []);
+  }, [switchSession, professional]);
 
   const handleDeleteSession = useCallback((e, targetSessionId) => {
     e.stopPropagation();
@@ -135,9 +151,15 @@ const ChatInterface = () => {
       : []
   );
 
-  const handleSend = async () => {
-    if (!input.trim() || isAiTyping) return;
-    const text = input.trim();
+  const handleSuggestionClick = (text) => {
+    setRemainingSuggestions((prev) => prev.filter((s) => s !== text));
+    performSend(text);
+  };
+
+  const handleSend = () => performSend(input);
+
+  const performSend = async (text) => {
+    if (!text.trim() || isAiTyping) return;
     setInput('');
     setError(null);
 
@@ -154,7 +176,7 @@ const ChatInterface = () => {
         content: m.text,
       }));
 
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/chat?stream=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ systemPrompt: professional.systemPrompt, messages: chatMessages }),
@@ -165,13 +187,66 @@ const ChatInterface = () => {
         throw new Error(err || `Server error: ${res.status}`);
       }
 
-      const data = await res.json();
-      const aiMessage = { id: crypto.randomUUID(), sender: 'assistant', text: data.text, timestamp: Date.now() };
-      setMessages((prev) => [...prev, aiMessage]);
+      const contentType = res.headers.get('content-type') || '';
+      const isEventStream = contentType.includes('event-stream');
+
+      if (isEventStream) {
+        const aiMessage = { id: crypto.randomUUID(), sender: 'assistant', text: '', timestamp: Date.now(), streaming: true };
+        setMessages((prev) => [...prev, aiMessage]);
+        setIsStreaming(true);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullText += content;
+                  setMessages((prev) => {
+                    const updated = [...prev];
+                    const lastMsg = updated[updated.length - 1];
+                    if (lastMsg && lastMsg.sender === 'assistant' && lastMsg.id === aiMessage.id) {
+                      updated[updated.length - 1] = { ...lastMsg, text: fullText, streaming: true };
+                    }
+                    return updated;
+                  });
+                }
+              } catch {}
+            }
+          }
+        }
+
+        setMessages((prev) => {
+          const updated = [...prev];
+          const lastMsg = updated[updated.length - 1];
+          if (lastMsg && lastMsg.sender === 'assistant' && lastMsg.id === aiMessage.id) {
+            updated[updated.length - 1] = { ...lastMsg, streaming: false, timestamp: Date.now() };
+          }
+          return updated;
+        });
+      } else {
+        const data = await res.json();
+        const aiMessage = { id: crypto.randomUUID(), sender: 'assistant', text: data.text, timestamp: Date.now() };
+        setMessages((prev) => [...prev, aiMessage]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message');
     } finally {
       setIsAiTyping(false);
+      setIsStreaming(false);
     }
   };
 
@@ -239,29 +314,58 @@ const ChatInterface = () => {
             </div>
           </div>
           <span className="ci-org-badge">Mpela Co.</span>
+          <button className="ci-theme-toggle" onClick={() => window.__toggleTheme()} aria-label="Toggle dark mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
         </div>
 
-        <div className="ci-messages" ref={messagesEndRef}>
+        <div className="ci-messages" ref={messagesScrollRef} onScroll={handleMessagesScroll}>
           {displayMessages.map((msg) => (
-            <div key={msg.id} className={`ci-msg ci-msg--${msg.sender}`}>
+            <div key={msg.id} className={`ci-msg ci-msg--${msg.sender}${msg.streaming ? ' ci-msg--streaming' : ''}`}>
               <div className="ci-bubble">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+                {msg.streaming && <span className="ci-stream-cursor" />}
+                {msg.timestamp && !msg.streaming && (
+                  <span className="ci-msg-time">
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
               </div>
+              {msg.sender === 'assistant' && msg.id !== 'greeting' && !msg.streaming && (
+                <button className="ci-copy-btn" onClick={() => navigator.clipboard.writeText(msg.text)} title="Copy response">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+              )}
             </div>
           ))}
-          {isAiTyping && (
+          {isAiTyping && !isStreaming && (
             <div className="ci-msg ci-msg--assistant">
               <div className="ci-bubble ci-typing">
                 <span className="ci-typing-text">{LOADING_PHASES[loadingPhase]}</span>
-                <span className="dot-pulse" />
+                <span className="ci-spinner" />
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
+        {showScrollBtn && (
+          <button className="ci-scroll-btn" onClick={() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); setShowScrollBtn(false); }} aria-label="Scroll to bottom">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        )}
 
         <div className="ci-input-area">
           {error && (
             <div className="ci-error-bar">{error}</div>
+          )}
+          {remainingSuggestions.length > 0 && (
+            <div className="ci-suggestions">
+              {remainingSuggestions.map((s) => (
+                <button key={s} className="ci-suggestion-chip" onClick={() => handleSuggestionClick(s)}>
+                  {s}
+                </button>
+              ))}
+            </div>
           )}
           <div className="ci-input-row">
             <input

@@ -1,30 +1,33 @@
-const CACHE = 'charaverse-v1';
-const ASSETS = ['/', '/index.html'];
+const CACHE = 'charaverse-v2';
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
-  );
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (e) => {
   if (e.request.mode === 'navigate') {
-    e.respondWith(caches.match('/').then((cached) => cached || fetch(e.request)));
+    e.respondWith(
+      fetch(e.request).catch(async () => {
+        const cached = await caches.match('/');
+        if (cached) return cached;
+        // If not in cache and network fails, return an offline page or just let it fail gracefully
+        return new Response('Network error and no offline cache available.', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: new Headers({ 'Content-Type': 'text/plain' })
+        });
+      })
+    );
     return;
   }
+  
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request).then((res) => {
-      if (res.ok && e.request.url.startsWith(self.location.origin)) {
-        const clone = res.clone();
-        caches.open(CACHE).then((cache) => cache.put(e.request, clone));
-      }
-      return res;
-    }))
+    caches.match(e.request).then((cached) => cached || fetch(e.request))
   );
 });
