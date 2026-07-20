@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 import { writeFileSync, mkdirSync } from 'fs';
 
-const URL = 'https://charaverse-frontend.vercel.app';
+const URL = 'https://mpela-co-ai-companions.vercel.app';
 const OUT = 'showcase-output';
 mkdirSync(OUT, { recursive: true });
 
@@ -112,14 +112,16 @@ const context = await browser.newContext({
 page = await context.newPage();
 start = Date.now();
 
-// ══════ 1 — HOMEPAGE ══════
-rec('establishing', 'navigate', '',
-  'first look at Charaverse', 'welcoming, intrigued',
-  "Welcome to Charaverse. I'm landing on the homepage for the first time and immediately the branding catches my eye — Mpela Co. paired with a rich gold and navy colour scheme. The tagline 'Your Professional Companions' tells me this is a place where I can find expert AI consultants. Let me take it all in before I explore further.",
-  8
-);
+// ══════ 1 — LOAD PAGE (timer starts AFTER load so you can cut loading from video) ══════
 await page.goto(URL, { waitUntil: 'networkidle0', timeout: 30000 });
 await sleep(3000);
+start = Date.now();
+
+rec('establishing', 'navigate', '',
+  'first look at Mpela Co. AI Companions', 'welcoming, intrigued',
+  "Welcome to Mpela Co. AI Companions. I'm landing on the homepage for the first time and immediately the branding catches my eye — Mpela Co. paired with a rich gold and navy colour scheme. The tagline 'Your Professional Companions' tells me this is a place where I can find expert AI consultants. Let me take it all in before I explore further.",
+  8
+);
 await snap(page, '01-home-hero');
 
 // ══════ 2 — SCROLL GRID ══════
@@ -309,7 +311,7 @@ await snap(page, '18-final-hero');
 // ══════ 19 — OUTRO ══════
 rec('closing', 'showcase complete', '',
   'wrap up the tour', 'satisfied, impressed',
-  "That's the Charaverse. Distinct personalities, natural streaming responses, smooth transitions. Each companion feels real in their own way. Whether legal, wellness, business, career, or finance — there's someone here to help. Powered by Mpela Co.",
+  "That's Mpela Co. AI Companions. Distinct personalities, natural streaming responses, smooth transitions. Each companion feels real in their own way. Whether legal, wellness, business, career, or finance — there's someone here to help. Powered by Mpela Co.",
   6
 );
 await sleep(2000);
@@ -317,11 +319,51 @@ await sleep(2000);
 // ══════ WRITE OUTPUT ══════
 const total = Number(((Date.now() - start) / 1000).toFixed(1));
 const output = {
-  title: 'Charaverse — Product Showcase Narration Guide',
+  title: 'Mpela Co. AI Companions — Product Showcase Narration Guide',
   description: 'Full narration log for AI voiceover. Each scene includes timing, user intent, emotional tone, and first-person narration script. The voiceover should read narration_script naturally, matching the emotional_tone.',
-  url: URL,
-  total_duration_seconds: total,
-  total_scenes: scenes.length,
+
+  // ── Project context for the AI agent ──
+  project: {
+    name: 'Mpela Co. AI Companions',
+    tagline: 'Your Professional Companions',
+    url: URL,
+    purpose: 'A collection of AI-powered professional companions from Mpela Co. Users browse a grid of expert personas and chat with them via a streaming chat interface.',
+    companions: [
+      { id: 'thabo-molefe', name: 'Thabo Molefe', title: 'Legal Counsel', specialty: 'South African contract law, business compliance, IP', tone: 'professional, precise, approachable' },
+      { id: 'amara-dlamini', name: 'Amara Dlamini', title: 'Therapeutic Counsellor', specialty: 'CBT, talk therapy, stress management', tone: 'warm, empathetic, calming' },
+      { id: 'lerato-nkosi', name: 'Lerato Nkosi', title: 'Business Strategy Consultant', specialty: 'SME strategy, market positioning, operations', tone: 'sharp, direct, encouraging' },
+      { id: 'sipho-zulu', name: 'Sipho Zulu', title: 'Career Development Coach', specialty: 'Career transitions, interviews, workplace growth', tone: 'motivating, down-to-earth' },
+      { id: 'zanele-khumalo', name: 'Zanele Khumalo', title: 'Personal Finance Advisor', specialty: 'Budgeting, saving, investing, planning', tone: 'friendly, clear, empowering' },
+    ],
+    features_showcased: [
+      'Streaming AI responses — text appears word-by-word with blinking cursor',
+      'Suggestion chips — preset prompts per companion, disappear on click',
+      'Dark mode toggle — persists in localStorage across sessions',
+      'CSS page transitions — fade+slide animation between routes',
+      'Copy button — hover to copy AI responses',
+      'Timestamps on messages',
+      'Scroll-to-bottom FAB',
+      'Intro popup with AI disclaimer per companion',
+      'Conversation sidebar with session history',
+    ],
+    design_notes: 'Gold (#c9a84c) and navy (#1e2a3a) colour scheme. Inter font for UI, Playfair Display for logo. Dark mode inverts the palette. Smooth animations throughout.',
+  },
+
+  // ── Showcase flow overview for the agent ──
+  showcase_flow: {
+    total_duration_seconds: total,
+    total_scenes: scenes.length,
+    structure: [
+      { phase: 'Opening', scenes: '1-2', description: 'Homepage hero and companion grid — establish the app visually' },
+      { phase: 'Thabo (Legal)', scenes: '3-11', description: 'Full conversation: hover, click, intro popup, suggestion chip, streaming response, follow-up typing, second response, reflection' },
+      { phase: 'Transition', scenes: '12', description: 'Navigate back to homepage via Back button' },
+      { phase: 'Amara (Wellness)', scenes: '13-16', description: 'Second companion: different personality, different tone, shows range' },
+      { phase: 'Closing', scenes: '17-19', description: 'Return to homepage, scroll to hero, final outro' },
+    ],
+    companions_visited: ['Thabo Molefe (Legal)', 'Amara Dlamini (Wellness)'],
+    voiceover_notes: 'All narration_script entries are written in FIRST PERSON. The voice should match emotional_tone at each scene. AI response text is captured in ai_response fields for reference.',
+  },
+
   scenes,
 };
 writeFileSync(`${OUT}/narration-log.json`, JSON.stringify(output, null, 2));

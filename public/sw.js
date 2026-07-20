@@ -1,4 +1,4 @@
-const CACHE = 'charaverse-v2';
+const CACHE = 'mpela-co-companions-v1';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

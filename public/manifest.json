@@ -1,7 +1,7 @@
 {
-  "name": "Charaverse",
-  "short_name": "Charaverse",
-  "description": "Discover and chat with AI personas — your virtual companions for legal, wellness, business, career, and finance guidance.",
+  "name": "Mpela CO AI Companions",
+  "short_name": "Mpela CO Companions",
+  "description": "Mpela CO AI Companions — Your professional AI companions for legal, wellness, business, career, and finance guidance.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#faf8f1",

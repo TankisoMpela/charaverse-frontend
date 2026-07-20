@@ -255,10 +255,6 @@ const ChatInterface = () => {
   return (
     <>
     <div className="ci-layout">
-      <a href="/" className="ci-back">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
-        Back
-      </a>
       <button className="ci-sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -300,6 +296,9 @@ const ChatInterface = () => {
 
       <div className="ci-container">
         <div className="ci-header">
+          <a href="/" className="ci-back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+          </a>
           <div className="ci-professional-info">
             <div className="ci-avatar">
               {professional.avatar ? (
